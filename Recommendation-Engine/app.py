@@ -7,7 +7,6 @@ import streamlit as st
 with open('movie_data.pkl', 'rb') as f:
     df, cosine_sim = pickle.load(f)
     
-    
 # FUNCTION TO GET MOVIE-RECOMENDATION.
 def get_recommendations(title, cosine_sim = cosine_sim):
     
