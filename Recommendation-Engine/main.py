@@ -19,13 +19,14 @@ def fetch_poster(movie_id):
     
     return full_path
 
-# LOAD DATA-FRAME FROM pickle FILE
-with open('artifacts/rating_data.pkl', 'rb') as f:
-    df = pickle.load(f)
+# LOAD DATA-FRAME FROM pickle FILE.
+with open('artifacts/genres_data.pkl', 'rb') as f:
+    genres_df = pickle.load(f)
 
-# RANDOMLY PICK 30 MOVIES (tmdbId) TO ADD MOVIES TO THE HOME PAGE.
-genres_unique_list = ['Sci-Fi', 'Adventure', 'Comedy', 'Action', 'Horror', 'Romance'] 
-home_df = np.random.choice(df['tmdbId'].unique(), size= 40, replace = False)  # Randomly select 30 unique tmdbIds
+# PICK RANDOM 10 MOVIES FROM EVERY(GIVEN) GENRES.
+# genres_list = ['Science Fiction', 'History', 'Action', 'Horror', 'Comedy', 'Romance']
+genres_list = genres_df['genres'].unique()
+genres_list = genres_list[(genres_list != None) & (genres_list != 'TV Movie') & (genres_list != 'Foreign')]
 
 # SET PAGE CONFIGURATION FOR FULL-SCREEN.
 st.set_page_config(
@@ -34,29 +35,24 @@ st.set_page_config(
     initial_sidebar_state="collapsed",  # Collapse the sidebar
 )
 
-
-# DISPLAY MOVIE POSTERS IN GRID WITH 5 COLUMNS
-for i in range(0, len(home_df), 10):  # Increment by 5 columns
-    cols = st.columns(10)  # Adjust to 5 columns per row
+# DISPLAY MOVIE POSTERS IN HOME-PAGE.
+for genre in genres_list:
+    st.subheader(f"{genre} Movies")
     
-    for idx, col in enumerate(cols):  # Loop to iterate columns in a row
-        if i + idx < len(home_df):  # Ensure we don't go out of bounds
-            movie_id = home_df[i + idx]  # Get tmdbId for movie
-            movie = df[df['tmdbId'] == movie_id].iloc[0]  # Get movie data from df
+    # Filter movies by genre and pick 10 random movies (or all if less than 10)
+    # genre_movies = genres_df[genres_df['genres'] == genre]['id'].drop_duplicates().head(10).tolist()
+    genre_movies = genres_df[genres_df['genres'] == genre]['id'].drop_duplicates().sample(n=10).tolist()
+    
+    # Create columns for displaying posters
+    cols = st.columns(10)
+    
+    for col, movie_id in zip(cols, genre_movies):
+        with col: 
+            if st.button('Watch', key = f'{movie_id}'):
+                pass
+            # Fetch and display the poster for each movie
+            st.image(fetch_poster(movie_id), width=130)
+            st.caption(f"{genres_df[genres_df['id'] == movie_id]['original_title'].drop_duplicates().iloc[0]}")
             
-            with col:
-                image_url = fetch_poster(movie_id)
-                
-                if st.button(f"Watch", key=f"movie_{movie['movieId']}"):
-                    pass
-                
-                # Embed image with fixed height and width using HTML                    
-                st.markdown(
-                    f"""
-                    <img src="{image_url}" style="width:140px; height:200px;">
-                    """,
-                    unsafe_allow_html=True,
-                )
-                st.write(movie["title"])  # Display movie title
                 
 
