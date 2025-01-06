@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 # LOAD THE PROCESSED-DATA(AS DATAFRAME) AND CONSINE-SIMILARITY MATRIX.
-with open('movie_data.pkl', 'rb') as f:
+with open('artifacts/movie_data.pkl', 'rb') as f:
     df, cosine_sim = pickle.load(f)
     
 # FUNCTION TO GET MOVIE-RECOMENDATION.
