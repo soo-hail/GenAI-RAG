@@ -6,6 +6,8 @@ from pydantic import BaseModel # ENSURES INPUT DATA MATCHES THE EXPECTED TYPES.
 from db import DocumentInformationChunks, DocumentTags, Tags, db, Documents, set_openai_api_key
 from constants import CREATE_FACT_CHUNKS_SYSTEM_PROMPT, GET_MATCHING_TAGS_SYSTEM_PROMPT
 
+from utils import find
+
 # FUNCTION TO DELETE DOCUMENT FROM DATABSE.
 def delete_document(document_id: int):
     Documents.delete().where(Documents.id == document_id).execute()
@@ -112,13 +114,18 @@ async def get_matching_tags(pdf_text: str):
             # VALIDATE, PARSE AND EXTRACT THE MATRCHING-TAG.
             matching_tag_names = GeneratedMatchingTags.model_validate_json(output.choices[0].message.content).tags
             
-            # EXTRACT THE ID(OF TAG).
+            # EXTRACT THE ID(OF TAG) - GET MATCHING-TAG ID.
             matching_tag_ids: list[int] = []
             for tag_name in matching_tag_names:
-                pass
-            
-        except:
+                matching_tag = find(lambda tag: tag.name.lower() == tag_name.lower(), tags_result)
+                if matching_tag:
+                    matching_tag_ids.append(matching_tag.id)
+        except Exception as e:
             # TRY REQUESTING OPENAI API FOR 5 TIMES, INCASE SOME ERROR OCCURED WHILE INTERACTING WITH OPENAI API. 
-            pass
+            count_requests += 1
+            if count_requests > 5:
+                raise e
+            
+            await sleep(2) # 2sec delay for next request.   
     
     
